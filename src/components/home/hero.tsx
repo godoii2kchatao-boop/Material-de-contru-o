@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { photo } from '@/lib/photos';
 import Link from 'next/link';
+import { ArrowRight, FileUp } from 'lucide-react';
 import { SearchBox } from '@/components/layout/search-box';
 import { HeroSkip } from './hero-skip';
 
@@ -42,19 +43,36 @@ export function Hero({ storeName, productCount, categoryCount }: { storeName: st
             A força da sua obra começa aqui.
           </h1>
           <p className="mt-4 max-w-[52ch] text-[16px] text-white/80 md:mt-5 md:text-[19px]">
-            {productCount} materiais em {categoryCount} categorias, da fundação ao acabamento. Monte a lista, peça o orçamento pelo WhatsApp e receba na obra em Campinas e região.
+            <span className="sm:hidden">{productCount} materiais, orçamento pelo WhatsApp e entrega na obra em Campinas e região.</span>
+            <span className="hidden sm:inline">
+              {productCount} materiais em {categoryCount} categorias, da fundação ao acabamento. Monte a lista, peça o orçamento pelo WhatsApp e receba na obra em Campinas e região.
+            </span>
           </p>
           <div className="mt-7 hidden max-w-[560px] md:block">
             <SearchBox size="lg" />
           </div>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/produtos" className="btn btn-primary">
+          {/* Two jobs, two paths: build the list in the catalogue, or send the list you already have. */}
+          <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap md:mt-5">
+            <Link href="/produtos" className="btn btn-primary w-full sm:w-auto">
               Explorar materiais
             </Link>
-            <Link href="/orcamento" className="btn btn-secondary text-white">
+            <Link href="/orcamento" className="btn btn-secondary w-full text-white sm:w-auto" aria-describedby="hero-orcamento-desc">
               Solicitar orçamento
             </Link>
+            <span id="hero-orcamento-desc" className="sr-only">
+              Abre a lista de orçamento montada no catálogo
+            </span>
           </div>
+          <Link href="/enviar-lista" className="hero-list-link group mt-3 flex min-h-[64px] w-full items-center gap-3 rounded-[12px] bg-white/[0.08] px-4 py-3 ring-1 ring-white/20 backdrop-blur-[2px] transition-colors hover:bg-white/[0.13] sm:max-w-[460px]">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-[var(--color-accent)]">
+              <FileUp className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[16px] leading-tight font-semibold">Já tenho minha lista</span>
+              <span className="block text-[14px] leading-snug text-white/75">Envie uma foto, um PDF ou digite sua lista.</span>
+            </span>
+            <ArrowRight className="h-5 w-5 shrink-0 text-white/70 transition-transform group-hover:translate-x-0.5" aria-hidden />
+          </Link>
         </div>
       </div>
       <HeroSkip />
