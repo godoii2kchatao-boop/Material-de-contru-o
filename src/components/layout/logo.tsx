@@ -14,7 +14,7 @@ export function Logo({ name, descriptor, compact = false }: { name: string; desc
     <span className="inline-flex items-center gap-2.5">
       <LogoMark className="h-7 w-7 shrink-0" />
       <span className="grid leading-none">
-        <span className="font-display text-[19px] font-extrabold tracking-[-0.01em]" style={{ fontStretch: '122%' }}>
+        <span className="font-display text-[17px] font-extrabold min-[360px]:text-[19px] tracking-[-0.01em]" style={{ fontStretch: '122%' }}>
           {name}
         </span>
         {!compact && descriptor ? <span className="label mt-1 hidden text-[11px] tracking-[0.06em] uppercase opacity-70 sm:block">{descriptor}</span> : null}

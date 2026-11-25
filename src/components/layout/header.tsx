@@ -39,7 +39,7 @@ export function Header({ name, descriptor }: { name: string; descriptor: string 
 
   return (
     <header className="sticky top-0 z-40 bg-graphite-950/95 text-white md:backdrop-blur md:supports-[backdrop-filter]:bg-graphite-950/85">
-      <div className="wrap flex h-16 items-center gap-4 lg:gap-8">
+      <div className="wrap flex h-16 items-center gap-2 min-[360px]:gap-4 lg:gap-8">
         <Link href="/" className="shrink-0 rounded-md" aria-label={`${name}, página inicial`}>
           <Logo name={name} descriptor={descriptor} />
         </Link>
@@ -57,7 +57,7 @@ export function Header({ name, descriptor }: { name: string; descriptor: string 
         <div className="ml-auto hidden w-full min-w-0 max-w-[380px] md:block">
           <SearchBox placeholder="Buscar material ou código" />
         </div>
-        <Link href="/orcamento" className="btn btn-primary btn-sm ml-auto shrink-0 md:ml-0" aria-label={`Minha lista de orçamento, ${count} ${count === 1 ? 'item' : 'itens'}`}>
+        <Link href="/orcamento" className="btn btn-primary btn-sm ml-auto shrink-0 max-[359px]:px-2.5 md:ml-0" aria-label={`Minha lista de orçamento, ${count} ${count === 1 ? 'item' : 'itens'}`}>
           <ClipboardList aria-hidden className="h-[18px] w-[18px]" />
           <span className="hidden sm:inline">Minha lista</span>
           <span className="tabular grid min-w-6 place-items-center rounded-full bg-white/20 px-1.5 text-[13px] leading-6" suppressHydrationWarning>

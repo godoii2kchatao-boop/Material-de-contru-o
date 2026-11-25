@@ -34,7 +34,7 @@ export async function CatalogView({ searchParams, lockedCategory, title, intro }
       </nav>
       <h1 className="display mt-4 text-[clamp(32px,5vw,64px)]">{title}</h1>
       {intro ? <p className="mt-3 max-w-[60ch] text-[16.5px] text-graphite-700">{intro}</p> : null}
-      <div className="mt-8 grid gap-8 lg:grid-cols-[260px_1fr] lg:gap-10">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[260px_1fr] lg:gap-10">
         <aside aria-label="Filtros">
           <Suspense>
             <Filters basePath={lockedCategory ? `/categorias/${lockedCategory}` : '/produtos'} lockedCategory={lockedCategory} categories={categories.map((c) => ({ value: c.slug, label: c.name, count: counts[c.slug] }))} applications={apps} brands={brands.map((b) => ({ value: b, label: b }))} />

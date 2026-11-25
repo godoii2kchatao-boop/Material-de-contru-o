@@ -128,9 +128,9 @@ export function Filters({ categories, applications, brands, basePath, lockedCate
 
 function SortSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <label className="flex items-center gap-2 text-[14px] font-semibold">
+    <label className="flex min-w-0 items-center gap-2 text-[14px] font-semibold">
       <span>Ordenar</span>
-      <select className="input !min-h-10 w-auto" value={value || 'relevancia'} onChange={(e) => onChange(e.target.value)}>
+      <select className="input !min-h-10 w-auto min-w-0" value={value || 'relevancia'} onChange={(e) => onChange(e.target.value)}>
         <option value="relevancia">Relevância</option>
         <option value="preco_asc">Menor preço</option>
         <option value="preco_desc">Maior preço</option>
