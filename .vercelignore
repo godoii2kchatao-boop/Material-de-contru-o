@@ -1,0 +1,10 @@
+node_modules
+.next
+data
+capturas
+scripts
+test-results
+playwright-report
+*.tsbuildinfo
+tests
+vitest.config.mts
