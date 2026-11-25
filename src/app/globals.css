@@ -474,7 +474,7 @@
   animation: none;
 }
 [data-intro='done'] .hero-strips {
-  visibility: hidden;
+  display: none; /* not just hidden: lazy images inside are then never downloaded */
 }
 
 /* ---------- Scroll chapters: driven by --p (0 → 1) set from JS ---------- */

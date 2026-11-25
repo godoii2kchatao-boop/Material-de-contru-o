@@ -38,7 +38,7 @@ export function Header({ name, descriptor }: { name: string; descriptor: string 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
-    <header className="sticky top-0 z-40 bg-graphite-950/95 text-white backdrop-blur supports-[backdrop-filter]:bg-graphite-950/85">
+    <header className="sticky top-0 z-40 bg-graphite-950/95 text-white md:backdrop-blur md:supports-[backdrop-filter]:bg-graphite-950/85">
       <div className="wrap flex h-16 items-center gap-4 lg:gap-8">
         <Link href="/" className="shrink-0 rounded-md" aria-label={`${name}, página inicial`}>
           <Logo name={name} descriptor={descriptor} />
@@ -54,7 +54,7 @@ export function Header({ name, descriptor }: { name: string; descriptor: string 
             ))}
           </ul>
         </nav>
-        <div className="ml-auto hidden w-full max-w-[380px] md:block">
+        <div className="ml-auto hidden w-full min-w-0 max-w-[380px] md:block">
           <SearchBox placeholder="Buscar material ou código" />
         </div>
         <Link href="/orcamento" className="btn btn-primary btn-sm ml-auto shrink-0 md:ml-0" aria-label={`Minha lista de orçamento, ${count} ${count === 1 ? 'item' : 'itens'}`}>

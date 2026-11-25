@@ -19,7 +19,7 @@ const STRIPS = [
 export function Hero({ storeName, productCount, categoryCount }: { storeName: string; productCount: number; categoryCount: number }) {
   return (
     <section className="hero relative isolate overflow-hidden bg-graphite-950 text-white" aria-labelledby="hero-title">
-      <script dangerouslySetInnerHTML={{ __html: "try{if(sessionStorage.getItem('fb-intro')||matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.dataset.intro='done';sessionStorage.setItem('fb-intro','1')}catch(e){}" }} />
+      <script dangerouslySetInnerHTML={{ __html: "try{if(sessionStorage.getItem('fb-intro')||matchMedia('(prefers-reduced-motion: reduce)').matches||navigator.deviceMemory<=2||navigator.hardwareConcurrency<=2||(navigator.connection&&navigator.connection.saveData))document.documentElement.dataset.intro='done';sessionStorage.setItem('fb-intro','1')}catch(e){}" }} />
       <div className="absolute inset-0 -z-10" aria-hidden>
         <div className="hero-strips absolute inset-0 grid grid-cols-3">
           {STRIPS.map((s, i) => (
