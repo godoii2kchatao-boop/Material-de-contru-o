@@ -8,7 +8,15 @@ import { ToolSpotlight } from '@/components/home/tool-spotlight';
 import { RawToFinish } from '@/components/home/raw-to-finish';
 import { CompareSlider } from '@/components/home/compare-slider';
 import { ProductCard } from '@/components/catalog/product-card';
-import { CATEGORY_ICON } from '@/components/catalog/product-visual';
+import { ProductVisual } from '@/components/catalog/product-visual';
+
+// Site photos (already used by the project) for categories that have no product photo yet.
+const CATEGORY_PHOTO: Record<string, string> = {
+  'materiais-eletricos': photo('eletricista'),
+  'materiais-hidraulicos': photo('hidraulica-tubos'),
+  revestimentos: photo('revestimento-metro'),
+  ferramentas: photo('furadeira-concreto'),
+};
 import { AddToList } from '@/components/catalog/add-to-list';
 import { Price } from '@/components/catalog/price';
 import { getCatalog, getOffers, getRegions, getSettings, toCard } from '@/lib/data';
@@ -34,18 +42,24 @@ export default async function Home() {
             Ver catálogo completo <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
-        <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
           {categories.map((c) => {
-            const Icon = CATEGORY_ICON[c.slug];
+            // Photo: a product photo from the category, else a site photo of the same subject; otherwise the category icon tile.
+            const image = products.find((p) => p.category === c.slug && p.image)?.image ?? CATEGORY_PHOTO[c.slug] ?? null;
             return (
               <li key={c.slug}>
-                <Link href={`/categorias/${c.slug}`} className="card lift flex h-full min-h-[132px] flex-col justify-between gap-4 p-4">
-                  {Icon ? <Icon aria-hidden strokeWidth={1.5} className="h-7 w-7 text-[var(--color-accent)]" /> : null}
-                  <span>
-                    <span className="block text-[15px] leading-snug font-semibold">{c.name}</span>
-                    <span className="tabular text-[13px] text-text-dim">
-                      {counts[c.slug]} {counts[c.slug] === 1 ? 'item' : 'itens'}
+                <Link href={`/categorias/${c.slug}`} className="card lift group flex h-full flex-col overflow-hidden">
+                  <div aria-hidden>
+                    <ProductVisual image={image} category={c.slug} name={c.name} sizes="(min-width:1024px) 15vw, (min-width:768px) 22vw, (min-width:640px) 30vw, 46vw" className="aspect-[4/3]" iconClass="h-10 w-10" />
+                  </div>
+                  <span className="flex flex-1 items-start justify-between gap-2 border-t-[3px] border-[var(--color-accent)] p-3 sm:p-4">
+                    <span className="min-w-0">
+                      <span className="block text-[14px] leading-snug font-semibold [overflow-wrap:anywhere] sm:text-[15px]">{c.name}</span>
+                      <span className="tabular text-[13px] text-text-dim">
+                        {counts[c.slug]} {counts[c.slug] === 1 ? 'item' : 'itens'}
+                      </span>
                     </span>
+                    <ArrowRight aria-hidden className="mt-0.5 hidden h-4 w-4 shrink-0 text-[var(--color-accent)] sm:block transition-transform duration-200 group-hover:translate-x-0.5" />
                   </span>
                 </Link>
               </li>
