@@ -16,6 +16,7 @@ const CATEGORY_PHOTO: Record<string, string> = {
   'materiais-hidraulicos': photo('hidraulica-tubos'),
   revestimentos: photo('revestimento-metro'),
   ferramentas: photo('furadeira-concreto'),
+  'portas-janelas': '/categorias/portas-janelas.avif',
 };
 import { AddToList } from '@/components/catalog/add-to-list';
 import { Price } from '@/components/catalog/price';
@@ -54,7 +55,7 @@ export default async function Home() {
                   </div>
                   <span className="flex flex-1 items-start justify-between gap-2 border-t-[3px] border-[var(--color-accent)] p-3 sm:p-4">
                     <span className="min-w-0">
-                      <span className="block text-[14px] leading-snug font-semibold [overflow-wrap:anywhere] sm:text-[15px]">{c.name}</span>
+                      <span className="block text-[14px] leading-snug font-semibold hyphens-auto sm:text-[15px]">{c.name}</span>
                       <span className="tabular text-[13px] text-text-dim">
                         {counts[c.slug]} {counts[c.slug] === 1 ? 'item' : 'itens'}
                       </span>

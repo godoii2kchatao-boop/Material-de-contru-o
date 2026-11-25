@@ -19,9 +19,9 @@ const FILE = path.join(/*turbopackIgnore: true*/ DATA_DIR, 'store.json');
 
 let cache: { data: StoreData; mtime: number } | null = null;
 
-export const STORE_VERSION = 5;
+export const STORE_VERSION = 6;
 
-/** v2–v5: products gain photos and credits from the tenant catalogue (only where the store has none). */
+/** v2–v6: products gain photos and credits from the tenant catalogue (only where the store has none). */
 function migrate(data: StoreData) {
   const byId = new Map(catalogSeed.products.map((p) => [p.id, p]));
   for (const p of data.products) {
