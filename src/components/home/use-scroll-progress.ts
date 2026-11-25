@@ -9,7 +9,9 @@ import { useEffect, useRef } from 'react';
 export function useScrollProgress<T extends HTMLElement>(onProgress?: (p: number) => void) {
   const ref = useRef<T>(null);
   const cb = useRef(onProgress);
-  cb.current = onProgress;
+  useEffect(() => {
+    cb.current = onProgress;
+  });
   useEffect(() => {
     const el = ref.current;
     if (!el) return;

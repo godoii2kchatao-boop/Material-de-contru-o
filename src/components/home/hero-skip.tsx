@@ -5,9 +5,12 @@ export function HeroSkip() {
   const [show, setShow] = useState(false);
   useEffect(() => {
     if (document.documentElement.dataset.intro === 'done') return;
-    setShow(true);
+    const s = window.setTimeout(() => setShow(true), 0);
     const t = window.setTimeout(() => setShow(false), 2600);
-    return () => window.clearTimeout(t);
+    return () => {
+      window.clearTimeout(s);
+      window.clearTimeout(t);
+    };
   }, []);
   if (!show) return null;
   return (
