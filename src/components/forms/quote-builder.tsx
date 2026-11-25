@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Check, ClipboardCopy, History, Link2, MessageCircle, Save, Trash2, Truck } from 'lucide-react';
+import { Check, ChevronDown, ClipboardCopy, History, Link2, MessageCircle, Save, Trash2, Truck } from 'lucide-react';
 import { cart, decodeList, encodeList, useCart } from '@/lib/cart-store';
 import type { ProductCard } from '@/lib/data';
 import { formatBRL, formatCep, formatPhone, profileLabel } from '@/lib/format';
@@ -10,6 +10,7 @@ import { ProductVisual } from '@/components/catalog/product-visual';
 import { track } from '@/lib/track';
 
 type Errors = Record<string, string>;
+const MORE_FIELDS = ['customer.profile', 'customer.email', 'customer.company', 'notes', 'project'];
 interface Result {
   code: string;
   message: string;
@@ -35,8 +36,8 @@ export function QuoteBuilder({ products, policy, privacy, source = 'carrinho' }:
     const shared = decodeList(sp.get('lista')).filter((l) => byId.has(l.productId));
     if (shared.length) {
       cart.merge(shared);
-      setImported(shared.length);
       window.history.replaceState(null, '', '/orcamento');
+      queueMicrotask(() => setImported(shared.length));
     }
   }, [sp, byId]);
 
@@ -50,6 +51,7 @@ export function QuoteBuilder({ products, policy, privacy, source = 'carrinho' }:
   const [freightLoading, setFreightLoading] = useState(false);
   const [listName, setListName] = useState('');
   const [copied, setCopied] = useState<'link' | 'msg' | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const subtotal = items.reduce((s, { line, p }) => s + (p.priceCents ?? 0) * line.qty, 0);
   const consultCount = items.filter(({ p }) => p.priceCents == null).length;
@@ -80,7 +82,8 @@ export function QuoteBuilder({ products, policy, privacy, source = 'carrinho' }:
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           customer: { name: form.name, phone: form.phone, email: form.email, profile: form.profile, company: form.company },
-          delivery: { mode: form.mode, cep: form.cep, district: form.district, address: form.address },
+          // Pickup needs no address: hidden fields are not sent, so stale values never block or leak.
+          delivery: form.mode === 'entrega' ? { mode: 'entrega', cep: form.cep, district: form.district, address: form.address } : { mode: 'retirada', cep: null, district: null, address: null },
           items: items.map(({ line }) => ({ productId: line.productId, qty: line.qty })),
           notes: form.notes,
           project: form.projectName || form.recurring ? { name: form.projectName || null, recurring: form.recurring, volume: null } : null,
@@ -91,8 +94,11 @@ export function QuoteBuilder({ products, policy, privacy, source = 'carrinho' }:
       });
       const data = await res.json();
       if (res.status === 422) {
-        setErrors(data.errors ?? {});
-        requestAnimationFrame(() => document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
+        const errs: Errors = data.errors ?? {};
+        setErrors(errs);
+        // Errors in the collapsed section open it, so the message is never hidden.
+        if (Object.keys(errs).some((k) => MORE_FIELDS.includes(k))) setMoreOpen(true);
+        window.setTimeout(() => document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(), 30);
       } else if (!res.ok) setFatal(data.error ?? 'Não foi possível enviar agora. Tente de novo.');
       else {
         setResult(data);
@@ -189,7 +195,7 @@ export function QuoteBuilder({ products, policy, privacy, source = 'carrinho' }:
           <ul className="card divide-y divide-concrete-200">
             {items.map(({ line, p }) => (
               <li key={p.id} className="grid grid-cols-[64px_1fr] gap-3 p-4 sm:grid-cols-[64px_1fr_auto] sm:items-center">
-                <ProductVisual image={p.image} category={p.category} name={p.name} sizes="64px" className="h-16 w-16 overflow-hidden rounded-[10px]" iconClass="h-7 w-7" />
+                <ProductVisual image={p.image} imageAlt={p.imageAlt} category={p.category} name={p.name} sizes="64px" className="h-16 w-16 overflow-hidden rounded-[10px]" iconClass="h-7 w-7" />
                 <div className="min-w-0">
                   <Link href={`/produtos/${p.slug}`} className="link-draw font-semibold">
                     {p.name}
@@ -201,7 +207,7 @@ export function QuoteBuilder({ products, policy, privacy, source = 'carrinho' }:
                   <label className="sr-only" htmlFor={`q-${p.id}`}>
                     Quantidade de {p.name} em {p.unit}
                   </label>
-                  <input id={`q-${p.id}`} className="input tabular !min-h-11 w-24 text-center" inputMode="decimal" defaultValue={line.qty} onBlur={(e) => cart.set(p.id, Math.max(p.minQty, Number(e.target.value.replace(',', '.')) || p.minQty))} />
+                  <QtyInput id={`q-${p.id}`} qty={line.qty} minQty={p.minQty} onChange={(n) => cart.set(p.id, n)} />
                   <span className="w-16 text-[14px] text-text-dim">{p.unit}</span>
                   <button type="button" className="grid h-11 w-11 place-items-center rounded-[10px] text-danger hover:bg-mineral-50" aria-label={`Remover ${p.name}`} onClick={() => cart.remove(p.id)}>
                     <Trash2 className="h-5 w-5" />
@@ -303,48 +309,63 @@ export function QuoteBuilder({ products, policy, privacy, source = 'carrinho' }:
           {(p) => <input {...p} className="input" autoComplete="name" value={form.name} onChange={(e) => up('name', e.target.value)} />}
         </Field>
         <Field label="WhatsApp ou telefone com DDD" error={errors['customer.phone']}>
-          {(p) => <input {...p} className="input tabular" inputMode="tel" autoComplete="tel" placeholder="(19) 90000-0000" value={form.phone} onChange={(e) => up('phone', formatPhone(e.target.value))} />}
+          {(p) => <input {...p} className="input tabular" type="tel" inputMode="tel" autoComplete="tel" placeholder="(19) 90000-0000" value={form.phone} onChange={(e) => up('phone', formatPhone(e.target.value))} />}
         </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Você é" error={errors['customer.profile']}>
-            {(p) => (
-              <select {...p} className="input" value={form.profile} onChange={(e) => up('profile', e.target.value)}>
-                {Object.entries(profileLabel).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-            )}
-          </Field>
-          <Field label="E-mail (opcional)" error={errors['customer.email']}>
-            {(p) => <input {...p} className="input" type="email" autoComplete="email" value={form.email} onChange={(e) => up('email', e.target.value)} />}
-          </Field>
-        </div>
-        {['construtora', 'manutencao', 'engenheiro', 'arquiteto'].includes(form.profile) ? (
-          <Field label="Empresa (opcional)" error={errors['customer.company']}>
-            {(p) => <input {...p} className="input" autoComplete="organization" value={form.company} onChange={(e) => up('company', e.target.value)} />}
-          </Field>
-        ) : null}
 
         <fieldset className="grid gap-3">
           <legend className="mb-2 text-[14px] font-semibold">Como receber</legend>
           <div className="grid grid-cols-2 gap-2">
             {(['entrega', 'retirada'] as const).map((m) => (
-              <label key={m} className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-[10px] text-[15px] font-semibold ring-[1.5px] ${form.mode === m ? 'bg-graphite-900 text-white ring-graphite-900' : 'ring-concrete-300'}`}>
-                <input type="radio" name="mode" value={m} checked={form.mode === m} onChange={() => up('mode', m)} className="sr-only" />
+              <label key={m} className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-[10px] px-2 text-center text-[15px] leading-tight font-semibold ring-[1.5px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--color-safety)] ${form.mode === m ? 'bg-graphite-900 text-white ring-graphite-900' : 'ring-concrete-300'}`}>
+                <input
+                  type="radio"
+                  name="mode"
+                  value={m}
+                  checked={form.mode === m}
+                  onChange={() => {
+                    up('mode', m);
+                    setFreight(null);
+                  }}
+                  className="sr-only"
+                />
                 {m === 'entrega' ? 'Entrega na obra' : 'Retirar na loja'}
               </label>
             ))}
           </div>
           {form.mode === 'entrega' ? (
-            <>
+            <div className="grid gap-4" data-testid="entrega-campos">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="CEP" error={errors['delivery.cep']}>
-                  {(p) => <input {...p} className="input tabular" inputMode="numeric" autoComplete="postal-code" placeholder="13000-000" value={form.cep} onChange={(e) => up('cep', formatCep(e.target.value))} />}
+                  {(p) => (
+                    <input
+                      {...p}
+                      className="input tabular"
+                      inputMode="numeric"
+                      autoComplete="postal-code"
+                      placeholder="13000-000"
+                      value={form.cep}
+                      onChange={(e) => {
+                        up('cep', formatCep(e.target.value));
+                        setFreight(null);
+                      }}
+                    />
+                  )}
                 </Field>
-                <Field label="Bairro">{(p) => <input {...p} className="input" value={form.district} onChange={(e) => up('district', e.target.value)} />}</Field>
+                <Field label="Bairro">
+                  {(p) => (
+                    <input
+                      {...p}
+                      className="input"
+                      value={form.district}
+                      onChange={(e) => {
+                        up('district', e.target.value);
+                        setFreight(null);
+                      }}
+                    />
+                  )}
+                </Field>
               </div>
+              <p className="-mt-2 text-[13px] text-text-dim">Informe o CEP ou o bairro.</p>
               <Field label="Endereço aproximado (opcional)">{(p) => <input {...p} className="input" autoComplete="street-address" value={form.address} onChange={(e) => up('address', e.target.value)} />}</Field>
               <button type="button" className="btn btn-quiet btn-sm w-fit" onClick={checkFreight} disabled={freightLoading || (!form.cep && !form.district)}>
                 <Truck className="h-4 w-4" aria-hidden /> {freightLoading ? 'Consultando…' : 'Estimar frete'}
@@ -356,21 +377,62 @@ export function QuoteBuilder({ products, policy, privacy, source = 'carrinho' }:
                   {freight.message}
                 </p>
               ) : null}
-            </>
-          ) : null}
+            </div>
+          ) : (
+            <p className="rounded-[10px] bg-mineral-50 p-3 text-[14px]" data-testid="retirada-aviso">
+              Sem endereço: a loja avisa pelo WhatsApp quando o pedido estiver separado para retirada.
+            </p>
+          )}
         </fieldset>
-        <Field label="Nome da obra (opcional)">{(p) => <input {...p} className="input" placeholder="Ex.: Reforma do banheiro" value={form.projectName} onChange={(e) => up('projectName', e.target.value)} />}</Field>
-        <label className="flex items-start gap-3 text-[15px]">
-          <input type="checkbox" className="mt-1 h-5 w-5 accent-[var(--color-accent)]" checked={form.recurring} onChange={(e) => up('recurring', e.target.checked)} />
-          Compro esses materiais com frequência (lista recorrente)
-        </label>
-        <Field label="Observações (opcional)" error={errors.notes}>
-          {(p) => <textarea {...p} className="input" rows={3} placeholder="Acesso à obra, horário para entrega, cores…" value={form.notes} onChange={(e) => up('notes', e.target.value)} />}
-        </Field>
+
+        <details
+          className="group rounded-[12px] ring-[1.5px] ring-concrete-300 open:ring-graphite-700/40"
+          open={moreOpen}
+          onToggle={(e) => setMoreOpen((e.currentTarget as HTMLDetailsElement).open)}
+        >
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 text-[15px] font-semibold [&::-webkit-details-marker]:hidden">
+            <span>
+              Informações adicionais <span className="font-normal text-text-dim">(opcional)</span>
+            </span>
+            <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 group-open:rotate-180" aria-hidden />
+          </summary>
+          <div className="grid gap-4 px-4 pt-1 pb-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Você é" error={errors['customer.profile']}>
+                {(p) => (
+                  <select {...p} className="input" value={form.profile} onChange={(e) => up('profile', e.target.value)}>
+                    {Object.entries(profileLabel).map(([k, v]) => (
+                      <option key={k} value={k}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </Field>
+              <Field label="E-mail" error={errors['customer.email']}>
+                {(p) => <input {...p} className="input" type="email" autoComplete="email" value={form.email} onChange={(e) => up('email', e.target.value)} />}
+              </Field>
+            </div>
+            {['construtora', 'manutencao', 'engenheiro', 'arquiteto'].includes(form.profile) ? (
+              <Field label="Empresa" error={errors['customer.company']}>
+                {(p) => <input {...p} className="input" autoComplete="organization" value={form.company} onChange={(e) => up('company', e.target.value)} />}
+              </Field>
+            ) : null}
+            <Field label="Nome da obra">{(p) => <input {...p} className="input" placeholder="Ex.: Reforma do banheiro" value={form.projectName} onChange={(e) => up('projectName', e.target.value)} />}</Field>
+            <label className="flex items-start gap-3 text-[15px]">
+              <input type="checkbox" className="mt-1 h-5 w-5 accent-[var(--color-accent)]" checked={form.recurring} onChange={(e) => up('recurring', e.target.checked)} />
+              Compro esses materiais com frequência (lista recorrente)
+            </label>
+            <Field label="Observações" error={errors.notes}>
+              {(p) => <textarea {...p} className="input" rows={3} placeholder="Acesso à obra, horário para entrega, cores…" value={form.notes} onChange={(e) => up('notes', e.target.value)} />}
+            </Field>
+          </div>
+        </details>
+
         <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" value={form.website} onChange={(e) => up('website', e.target.value)} />
         <div className="grid gap-1">
           <label className="flex items-start gap-3 text-[14.5px]">
-            <input type="checkbox" className="mt-1 h-5 w-5 accent-[var(--color-accent)]" checked={form.consent} onChange={(e) => up('consent', e.target.checked)} aria-invalid={!!errors.consent} />
+            <input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-[var(--color-accent)]" checked={form.consent} onChange={(e) => up('consent', e.target.checked)} aria-invalid={!!errors.consent} />
             <span>
               {privacy}{' '}
               <Link href="/privacidade" className="underline">
@@ -393,6 +455,37 @@ export function QuoteBuilder({ products, policy, privacy, source = 'carrinho' }:
         <p className="text-[13px] text-text-dim">{policy}</p>
       </form>
     </div>
+  );
+}
+
+/** Controlled quantity: the subtotal follows every keystroke; blur restores the minimum. */
+function QtyInput({ id, qty, minQty, onChange }: { id: string; qty: number; minQty: number; onChange: (n: number) => void }) {
+  const [draft, setDraft] = useState(String(qty).replace('.', ','));
+  const [seen, setSeen] = useState(qty);
+  if (seen !== qty) {
+    // The cart changed from elsewhere (another tab, a merge): show the new value.
+    setSeen(qty);
+    if (Number(draft.replace(',', '.')) !== qty) setDraft(String(qty).replace('.', ','));
+  }
+  return (
+    <input
+      id={id}
+      className="input tabular !min-h-11 w-24 text-center"
+      inputMode="decimal"
+      value={draft}
+      onChange={(e) => {
+        const v = e.target.value.replace(/[^0-9.,]/g, '');
+        setDraft(v);
+        const n = Number(v.replace(',', '.'));
+        if (v && Number.isFinite(n) && n > 0) onChange(n);
+      }}
+      onBlur={() => {
+        const n = Number(draft.replace(',', '.'));
+        const fixed = Number.isFinite(n) && n >= minQty ? n : minQty;
+        onChange(fixed);
+        setDraft(String(fixed).replace('.', ','));
+      }}
+    />
   );
 }
 

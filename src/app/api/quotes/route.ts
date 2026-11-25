@@ -11,7 +11,7 @@ import { isDemo } from '@/lib/tenant';
 import type { QuoteRequest } from '@/lib/types';
 
 export async function POST(req: Request) {
-  const rl = rateLimit(`quote:${clientIp(req.headers)}`, 6, 10 * 60_000);
+  const rl = rateLimit(`quote:${clientIp(req.headers)}`, Number(process.env.QUOTE_RATE_LIMIT ?? 6), 10 * 60_000);
   if (!rl.ok) return NextResponse.json({ error: 'Você enviou várias solicitações seguidas. Tente de novo em alguns minutos.' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } });
   let body: unknown;
   try {

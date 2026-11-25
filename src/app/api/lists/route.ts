@@ -14,7 +14,7 @@ import type { StoredFile } from '@/lib/types';
 
 /** Material list: typed text and/or files (PDF, photos). Files go to people, not to a robot. */
 export async function POST(req: Request) {
-  const rl = rateLimit(`list:${clientIp(req.headers)}`, 5, 10 * 60_000);
+  const rl = rateLimit(`list:${clientIp(req.headers)}`, Number(process.env.QUOTE_RATE_LIMIT ?? 5), 10 * 60_000);
   if (!rl.ok) return NextResponse.json({ error: 'Você enviou várias listas seguidas. Tente de novo em alguns minutos.' }, { status: 429 });
   const len = Number(req.headers.get('content-length') ?? 0);
   if (len > MAX_TOTAL_BYTES + 1024 * 1024) return NextResponse.json({ error: 'Os arquivos somam mais de 20 MB.' }, { status: 413 });
