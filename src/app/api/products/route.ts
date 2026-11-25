@@ -13,6 +13,6 @@ export async function GET(req: Request) {
   const list = queryCatalog(products, parseQuery(sp), categoryNames);
   return NextResponse.json({
     total: list.length,
-    items: list.slice(0, limit).map((p) => ({ id: p.id, slug: p.slug, name: p.name, sku: p.sku, unit: p.unit, priceCents: p.priceCents, image: p.image, category: p.category })),
+    items: list.slice(0, limit).map((p) => ({ id: p.id, slug: p.slug, name: p.name, sku: p.sku, unit: p.unit, priceCents: p.priceCents, image: p.image, imageAlt: p.imageAlt ?? null, category: p.category })),
   });
 }

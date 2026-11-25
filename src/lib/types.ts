@@ -26,8 +26,11 @@ export interface Product {
   description: string;
   specs: Record<string, string>;
   applications: string[];
-  /** Path to a real product photograph uploaded by the store, or null (a category tile is shown). */
+  /** Product photograph (store upload or licensed illustrative photo), or null: the category tile is shown. */
   image: string | null;
+  imageAlt?: string | null;
+  /** Set for licensed stand-in photos: shown as "Foto ilustrativa" with its credit. */
+  imageCredit?: ImageCredit | null;
   popular: boolean;
   freightClass: FreightClass;
   active: boolean;
@@ -35,6 +38,12 @@ export interface Product {
 }
 
 export type OfferKind = 'semanal' | 'combo' | 'kit' | 'categoria' | 'sazonal' | 'destaque';
+
+export interface ImageCredit {
+  author: string;
+  license: string;
+  source: string;
+}
 
 export interface Offer {
   id: string;

@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import type { StoreData } from '../types';
-import { TENANT_ID } from '../tenant';
+import { TENANT_ID, catalogSeed } from '../tenant';
 import { buildSeed } from './seed';
 
 /**
@@ -18,6 +18,22 @@ export const UPLOAD_DIR = path.join(/*turbopackIgnore: true*/ DATA_DIR, 'uploads
 const FILE = path.join(/*turbopackIgnore: true*/ DATA_DIR, 'store.json');
 
 let cache: { data: StoreData; mtime: number } | null = null;
+
+export const STORE_VERSION = 4;
+
+/** v2/v3: products gain photos and credits from the tenant catalogue (only where the store has none). */
+function migrate(data: StoreData) {
+  const byId = new Map(catalogSeed.products.map((p) => [p.id, p]));
+  for (const p of data.products) {
+    const seed = byId.get(p.id);
+    if (seed && !p.image && seed.image) {
+      p.image = seed.image;
+      p.imageAlt = seed.imageAlt ?? null;
+      p.imageCredit = seed.imageCredit ?? null;
+    }
+  }
+  data.version = STORE_VERSION;
+}
 let queue: Promise<unknown> = Promise.resolve();
 
 async function ensureDirs() {
@@ -38,6 +54,11 @@ async function load(): Promise<StoreData> {
     const st = await fs.stat(FILE);
     if (cache && cache.mtime === st.mtimeMs) return cache.data;
     const data = JSON.parse(await fs.readFile(FILE, 'utf8')) as StoreData;
+    if ((data.version ?? 1) < STORE_VERSION) {
+      migrate(data);
+      await writeAtomic(data);
+      return data;
+    }
     cache = { data, mtime: st.mtimeMs };
     return data;
   } catch (err) {

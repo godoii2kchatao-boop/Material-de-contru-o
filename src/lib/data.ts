@@ -48,6 +48,8 @@ export function toCard(p: Product) {
     priceCents: p.priceCents,
     availability: p.availability,
     image: p.image,
+    imageAlt: p.imageAlt ?? null,
+    illustrative: !!p.imageCredit,
     freightClass: p.freightClass,
     brand: p.brand,
     applications: p.applications,

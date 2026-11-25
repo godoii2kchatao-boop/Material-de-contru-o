@@ -8,7 +8,7 @@ export function ProductCard({ p, categoryName }: { p: Card; categoryName?: strin
   return (
     <article className="card lift flex flex-col overflow-hidden">
       <Link href={`/produtos/${p.slug}`} className="group block" aria-label={p.name}>
-        <ProductVisual image={p.image} category={p.category} name={p.name} className="aspect-[4/3]" />
+        <ProductVisual image={p.image} imageAlt={p.imageAlt} illustrative={p.illustrative} category={p.category} name={p.name} className="aspect-[4/3]" />
       </Link>
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="grid gap-1">

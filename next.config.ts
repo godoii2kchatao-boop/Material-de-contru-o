@@ -13,7 +13,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ['image/avif', 'image/webp'],
-    remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com', pathname: '/photo-*' }],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/photo-*' },
+      { protocol: 'https', hostname: 'upload.wikimedia.org', pathname: '/wikipedia/commons/**' },
+    ],
     qualities: [60, 72, 85],
     deviceSizes: [390, 640, 828, 1080, 1440, 1920, 2400],
     imageSizes: [64, 128, 256, 384],

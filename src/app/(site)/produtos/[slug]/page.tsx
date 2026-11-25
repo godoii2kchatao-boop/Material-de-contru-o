@@ -52,7 +52,21 @@ export default async function ProdutoPage({ params }: { params: Promise<{ slug: 
         / <span aria-current="page">{p.name}</span>
       </nav>
       <div className="mt-6 grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
-        <ProductVisual image={p.image} category={p.category} name={p.name} sizes="(min-width:1024px) 50vw, 100vw" className="aspect-square overflow-hidden rounded-[14px]" iconClass="h-28 w-28" />
+        <figure className="grid content-start gap-2">
+          <ProductVisual image={p.image} imageAlt={p.imageAlt} illustrative={!!p.imageCredit} priority category={p.category} name={p.name} sizes="(min-width:1024px) 50vw, 100vw" className="aspect-[4/3] overflow-hidden rounded-[14px]" iconClass="h-28 w-28" />
+          {p.imageCredit ? (
+            <figcaption className="text-[12.5px] text-text-dim">
+              Foto ilustrativa do material, não do item exato fornecido. Crédito: {p.imageCredit.author} ·{' '}
+              {p.imageCredit.source ? (
+                <a href={p.imageCredit.source} target="_blank" rel="noopener noreferrer" className="underline">
+                  {p.imageCredit.license}
+                </a>
+              ) : (
+                p.imageCredit.license
+              )}
+            </figcaption>
+          ) : null}
+        </figure>
         <div className="grid content-start gap-6">
           <div className="grid gap-2">
             <h1 className="heading text-[clamp(28px,3.6vw,44px)]">{p.name}</h1>

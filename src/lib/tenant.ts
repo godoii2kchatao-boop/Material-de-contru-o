@@ -25,6 +25,8 @@ export interface CatalogSeed {
     specs: Record<string, string>;
     applications: string[];
     image: string | null;
+    imageAlt?: string | null;
+    imageCredit?: { author: string; license: string; source: string } | null;
     popular: boolean;
   }[];
 }

@@ -120,7 +120,7 @@ export function buildSeed(now = new Date()): StoreData {
   }
 
   return {
-    version: 1,
+    version: 4,
     categories: catalogSeed.categories.map((c) => ({ ...c, active: true })),
     products,
     offers,

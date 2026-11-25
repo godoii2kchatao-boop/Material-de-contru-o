@@ -42,7 +42,7 @@ export function Footer({ s, categories }: { s: StoreSettings; categories: { slug
         />
       </div>
       <div className="wrap mt-14 grid gap-2 border-t border-white/10 pt-6 text-[13px] text-white/55">
-        <p>Fotografias: Unsplash (Licença Unsplash), servidas pelo CDN da Unsplash. Produtos sem foto própria aparecem com o ícone da categoria.</p>
+        <p>Fotografias de obra: Unsplash (Licença Unsplash). Fotos de produtos marcadas como ilustrativas trazem o crédito na ficha. Produtos sem foto aparecem com o ícone da categoria.</p>
         <p>
           © {new Date().getFullYear()} {s.storeName} — marca demonstrativa. Desenvolvido por KRB_DIGITAL.
         </p>
